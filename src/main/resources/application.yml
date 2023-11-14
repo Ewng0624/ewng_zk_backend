@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: user-center
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/user_center
+    username: root
+    password: root
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  # session失效时间
+  session:
+    timeout: 86400
+
+# 端口号
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+mybatis-plus:
+  configuration:
+#    下划线转驼峰
+    map-underscore-to-camel-case: false
+  global-config:
+    db-config:
+      logic-delete-field: isDelete #全局逻辑删除
+      logic-delete-value: 1  #逻辑已删除（默认为1）
+      logic-not-delete-value: 0  #逻辑未删除（默认未0）
+
+
+knife4j:
+  enable: true
