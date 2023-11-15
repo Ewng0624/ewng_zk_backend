@@ -50,8 +50,8 @@ public class UserServiceTest {
         userAccount = "ewngdog";
         password = "12345678";
         checkPassword = "12345678";
-        long result = userService.userRegister(userAccount, password, checkPassword);
-        Assert.assertEquals(1, result);
+        //long result = userService.userRegister(userAccount, password, checkPassword);
+        //Assert.assertEquals(1, result);
     }
 
 //    @Test

@@ -1,5 +1,6 @@
 package cn.zhuhai.usercenter.service;
 
+import cn.zhuhai.usercenter.common.BaseResponse;
 import cn.zhuhai.usercenter.model.domain.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -49,5 +50,12 @@ public interface UserService extends IService<User> {
      * @param id 用户id
      * @return 成功/失败
      */
-    public boolean deleteUser(long id);
+    boolean deleteUser(long id);
+
+    /**
+     * 注销用户
+     * @param request 请求
+     * @return 是否成功注销
+     */
+    Integer userLogout(HttpServletRequest request);
 }
