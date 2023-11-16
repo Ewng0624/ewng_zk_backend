@@ -7,17 +7,24 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import cn.zhuhai.usercenter.model.domain.User;
 import cn.zhuhai.usercenter.service.UserService;
 import cn.zhuhai.usercenter.mapper.UserMapper;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
 
 import javax.annotation.Resource;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static cn.zhuhai.usercenter.constant.UserConstant.USER_LOGIN_STATUS;
 
@@ -38,6 +45,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     @Resource
     private UserMapper userMapper;
+
     /**
      * 用户注册表
      * @param userAccount 账号
@@ -150,6 +158,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         safetyUser.setUserRole(user.getUserRole());
         safetyUser.setUserStatus(user.getUserStatus());
         safetyUser.setCreateTime(user.getCreateTime());
+        safetyUser.setTags(user.getTags());
         return safetyUser;
     }
     /**
@@ -190,6 +199,35 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     public Integer userLogout(HttpServletRequest request) {
         request.getSession().removeAttribute(USER_LOGIN_STATUS);
         return 1;
+    }
+
+    /**
+     * 根据标签搜索用户
+     * @param tagNameList 标签列表
+     * @return 脱敏后的用户信息
+     */
+    @Override
+    public List<User> searchUsersByTags(List<String> tagNameList) {
+        if (CollectionUtils.isEmpty(tagNameList)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        // 1. 先查询所有用户
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        List<User> userList = userMapper.selectList(queryWrapper);
+        Gson gson = new Gson();
+        // 2. 在内存中判断是否包含要求的标签
+        return userList.stream().filter(user -> {
+            String tagsStr = user.getTags();
+            Set<String> tempTagNameSet = gson.fromJson(tagsStr, new TypeToken<Set<String>>() {
+            }.getType());
+            tempTagNameSet = Optional.ofNullable(tempTagNameSet).orElse(new HashSet<>());
+            for (String tagName : tagNameList) {
+                if (!tempTagNameSet.contains(tagName)) {
+                    return false;
+                }
+            }
+            return true;
+        }).map(this::getSafeUser).collect(Collectors.toList());
     }
 }
 

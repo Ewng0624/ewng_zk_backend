@@ -21,8 +21,10 @@ server:
 
 mybatis-plus:
   configuration:
-#    下划线转驼峰
+    #下划线转驼峰
     map-underscore-to-camel-case: false
+    # 开启输出日志
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   global-config:
     db-config:
       logic-delete-field: isDelete #全局逻辑删除

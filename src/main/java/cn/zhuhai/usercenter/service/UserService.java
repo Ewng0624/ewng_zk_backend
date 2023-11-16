@@ -58,4 +58,11 @@ public interface UserService extends IService<User> {
      * @return 是否成功注销
      */
     Integer userLogout(HttpServletRequest request);
+
+    /**
+     * 根据标签搜索用户
+     * @param tagNameList 标签列表
+     * @return 脱敏后的用户信息
+     */
+    List<User> searchUsersByTags(List<String> tagNameList);
 }

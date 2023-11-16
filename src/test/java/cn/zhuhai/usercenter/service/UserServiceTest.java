@@ -54,11 +54,5 @@ public class UserServiceTest {
         //Assert.assertEquals(1, result);
     }
 
-//    @Test
-//    void userLogin() {
-//        String username = "ewngdog";
-//        String password = "12345678";
-//        User user = userService.userLogin(username, password);
-//
-//    }
+
 }
