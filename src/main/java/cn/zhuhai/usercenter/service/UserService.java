@@ -46,6 +46,21 @@ public interface UserService extends IService<User> {
     List<User> searchUsers(String username);
 
     /**
+     * 修改用户
+     * @param user 用户
+     * @param loginUser
+     * @return 是否成功
+     */
+    Integer updateUser(User user, User loginUser);
+
+    /**
+     * 获取当前用户
+     * @param request 请求
+     * @return 脱敏后的用户
+     */
+    User getLoginUser(HttpServletRequest request);
+
+    /**
      * 根据用户id删除用户
      * @param id 用户id
      * @return 成功/失败
@@ -65,4 +80,18 @@ public interface UserService extends IService<User> {
      * @return 脱敏后的用户信息
      */
     List<User> searchUsersByTags(List<String> tagNameList);
+
+    /**
+     * 是否是管理员
+     * @param request 请求
+     * @return 是否是管理员
+     */
+    Boolean isAdmin(HttpServletRequest request);
+
+    /**
+     * 是否是管理员
+     * @param loginUse 登录用户
+     * @return 是否是管理员
+     */
+    Boolean isAdmin(User loginUse);
 }

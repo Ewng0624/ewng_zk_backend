@@ -26,6 +26,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static cn.zhuhai.usercenter.constant.UserConstant.ADMIN_ROLE;
 import static cn.zhuhai.usercenter.constant.UserConstant.USER_LOGIN_STATUS;
 
 /**
@@ -178,6 +179,56 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     }
 
     /**
+     * 更新用户
+     * @param user 前端传递修改后的用户
+     * @param loginUser 登录用户
+     * @return
+     */
+    @Override
+    public Integer updateUser(User user, User loginUser) {
+        Long userId = user.getId();
+        // 判断当前id是否为空
+        if (userId == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        // todo 如果前端没有传递任何需要修改的值 则直接报错
+        // 只有管理员和自己可以修改用户
+        // 管理员修改任意用户  自己只能修改自己
+        if (!isAdmin(loginUser) && userId != loginUser.getId()) {
+            throw new BusinessException(ErrorCode.NO_AUTH);
+        }
+        User oldUser = userMapper.selectById(userId);
+        if (oldUser == null) {
+            throw new BusinessException(ErrorCode.NULL_ERROR);
+        }
+        // 根据传递的参数修改
+        // todo 存入数据库是明文
+        return userMapper.updateById(user);
+    }
+
+
+    @Override
+    public User getLoginUser(HttpServletRequest request) {
+        if (request == null) {
+            return null;
+        }
+        // 获取当前用户的信息
+        Object attribute = request.getSession().getAttribute(USER_LOGIN_STATUS);
+        if (attribute == null) {
+            return null;
+        }
+        User currentUser = (User) attribute;
+        // 脱敏用户信息
+        return getSafeUser(currentUser);
+//        // 通过id从数据库中获取用户信息// todo 校验用户是否合法
+//        Long id = currentUser.getId();
+//        User user = userService.getById(id);
+//        // 脱敏用户信息
+//        User safeUser = userService.getSafeUser(user);
+
+    }
+
+    /**
      * 根据用户id删除用户
      * @param id 用户id
      * @return 成功/失败
@@ -228,6 +279,28 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             }
             return true;
         }).map(this::getSafeUser).collect(Collectors.toList());
+    }
+
+    /**
+     * 是否是管理员
+     * @param request 请求
+     * @return 是否是管理员
+     */
+    public Boolean isAdmin(HttpServletRequest request) {
+        // 仅管理员可查询
+        Object userAttribute = request.getSession().getAttribute(USER_LOGIN_STATUS);
+        User user = (User) userAttribute;
+        return user != null && user.getUserRole() == ADMIN_ROLE;
+    }
+
+    /**
+     * 重载上面isAdmin的方法
+     * @param loginUse 登录用户
+     * @return
+     */
+    @Override
+    public Boolean isAdmin(User loginUse) {
+        return loginUse != null && loginUse.getUserRole() == ADMIN_ROLE;
     }
 }
 
