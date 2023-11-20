@@ -9,9 +9,17 @@ spring:
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
+  #Redis配置
   # session失效时间
   session:
     timeout: 86400
+  # session存储位置
+    store-type: redis
+  redis:
+    port: 6379
+    host: 192.168.160.130
+    database: 0
+    password: 123456
 
 # 端口号
 server:
@@ -24,13 +32,15 @@ mybatis-plus:
     #下划线转驼峰
     map-underscore-to-camel-case: false
     # 开启输出日志
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   global-config:
     db-config:
-      logic-delete-field: isDelete #全局逻辑删除
-      logic-delete-value: 1  #逻辑已删除（默认为1）
-      logic-not-delete-value: 0  #逻辑未删除（默认未0）
-
+      # 全局逻辑删除
+      logic-delete-field: isDelete
+      # 逻辑已删除(默认为1)
+      logic-delete-value: 1
+      # 逻辑未删除(默认未0)
+      logic-not-delete-value: 0
 
 knife4j:
   enable: true
