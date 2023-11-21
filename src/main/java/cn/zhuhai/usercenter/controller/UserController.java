@@ -10,13 +10,17 @@ import cn.zhuhai.usercenter.model.request.UserRegisterRequest;
 import cn.zhuhai.usercenter.service.UserService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static cn.zhuhai.usercenter.constant.UserConstant.ADMIN_ROLE;
@@ -24,10 +28,14 @@ import static cn.zhuhai.usercenter.constant.UserConstant.USER_LOGIN_STATUS;
 
 @RestController
 @RequestMapping("/user")
+@Slf4j
 public class UserController {
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private RedisTemplate redisTemplate;
 
     /**
      * 用户注册
@@ -155,14 +163,28 @@ public class UserController {
 
     @GetMapping("/recommend")
     public BaseResponse<Page<User>> recommendUser(int pageSize, int pageNum, HttpServletRequest request) {
+        // 获取当前登录用户
+        User loginUser = userService.getLoginUser(request);
+        Long userId = loginUser.getId();
+        String redisKey = String.format("zk:user:recommend:%s", userId);
+        ValueOperations valueOperations = redisTemplate.opsForValue();
+        Page<User> userPage = (Page<User>) valueOperations.get(redisKey);
+        // 如果有缓存直接读取缓存
+        if (userPage != null) {
+            return ResultUtils.success(userPage);
+        }
+        // 没有缓存,查数据库
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         // 数据少用列表全部加载
         //List<User> userList = userService.list(queryWrapper);
-        Page<User> userList = userService.page(new Page<>(pageNum, pageSize), queryWrapper);
-//        Page<User> result = userList.stream()
-//                .map(user -> userService.getSafeUser(user))
-//                .collect(Collectors.toList());
-        return ResultUtils.success(userList);
+        userPage = userService.page(new Page<>(pageNum, pageSize), queryWrapper);
+        // 写缓存
+        try {
+            valueOperations.set(redisKey, userPage, 1, TimeUnit.MINUTES);
+        } catch (Exception e) {
+            log.error("redis set key error");
+        }
+        return ResultUtils.success(userPage);
     }
 
     /**
