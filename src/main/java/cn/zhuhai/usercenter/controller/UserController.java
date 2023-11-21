@@ -23,8 +23,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static cn.zhuhai.usercenter.constant.UserConstant.ADMIN_ROLE;
-import static cn.zhuhai.usercenter.constant.UserConstant.USER_LOGIN_STATUS;
+import static cn.zhuhai.usercenter.constant.UserConstant.*;
 
 @RestController
 @RequestMapping("/user")
@@ -166,7 +165,7 @@ public class UserController {
         // 获取当前登录用户
         User loginUser = userService.getLoginUser(request);
         Long userId = loginUser.getId();
-        String redisKey = String.format("zk:user:recommend:%s", userId);
+        String redisKey = String.format("%s:user:recommend:%s", REDIS_KEY_PREFIX, userId);
         ValueOperations valueOperations = redisTemplate.opsForValue();
         Page<User> userPage = (Page<User>) valueOperations.get(redisKey);
         // 如果有缓存直接读取缓存

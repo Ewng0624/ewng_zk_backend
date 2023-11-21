@@ -19,4 +19,9 @@ public interface UserConstant {
      * 普通用户
      */
     int DEFAULT_ROLE = 0;
+
+    /**
+     * Redis key 的前缀
+     */
+    String REDIS_KEY_PREFIX = "zk";
 }
