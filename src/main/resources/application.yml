@@ -32,7 +32,7 @@ mybatis-plus:
     #下划线转驼峰
     map-underscore-to-camel-case: false
     # 开启输出日志
-#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   global-config:
     db-config:
       # 全局逻辑删除

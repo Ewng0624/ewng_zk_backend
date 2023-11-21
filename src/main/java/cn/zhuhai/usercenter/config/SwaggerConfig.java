@@ -24,6 +24,7 @@ public class SwaggerConfig {
                 .select()
                 // 指定@ApiOperation标注的接口被加入文档
                 .apis(RequestHandlerSelectors.basePackage("cn.zhuhai.usercenter.controller"))
+                // 路径选择 线上环境不要全部暴露
                 .paths(PathSelectors.any())
                 .build();
     }
