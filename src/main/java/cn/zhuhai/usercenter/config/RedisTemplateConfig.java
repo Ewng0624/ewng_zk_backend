@@ -1,5 +1,6 @@
 package cn.zhuhai.usercenter.config;
 
+import org.redisson.api.RedissonClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
