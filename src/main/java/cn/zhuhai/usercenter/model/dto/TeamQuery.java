@@ -1,14 +1,9 @@
 package cn.zhuhai.usercenter.model.dto;
 
 import cn.zhuhai.usercenter.common.PageRequest;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.util.Date;
 
 /**
  * @Author Ewng
@@ -22,6 +17,11 @@ public class TeamQuery extends PageRequest {
      *
      */
     private Long id;
+
+    /**
+     * 关键字查询
+     */
+    private String searchText;
 
     /**
      * 队伍名称

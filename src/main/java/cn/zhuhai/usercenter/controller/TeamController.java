@@ -8,6 +8,9 @@ import cn.zhuhai.usercenter.model.domain.Team;
 import cn.zhuhai.usercenter.model.domain.User;
 import cn.zhuhai.usercenter.model.dto.TeamQuery;
 import cn.zhuhai.usercenter.model.dto.request.TeamAddRequest;
+import cn.zhuhai.usercenter.model.dto.request.TeamJoinRequest;
+import cn.zhuhai.usercenter.model.dto.request.TeamUpdateRequest;
+import cn.zhuhai.usercenter.model.vo.TeamUserVO;
 import cn.zhuhai.usercenter.service.TeamService;
 import cn.zhuhai.usercenter.service.UserService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -18,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -72,21 +75,39 @@ public class TeamController {
         return ResultUtils.success(true);
     }
 
+//    /**
+//     * 更新队伍
+//     * @param team 前端传递更新后队伍参数
+//     * @return 成功 / 失败
+//     */
+//    @PostMapping("/update")
+//    public BaseResponse<Boolean> updateTeam(@RequestBody Team team) {
+//        if (team == null) {
+//            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+//        }
+//        boolean result = teamService.updateById(team);
+//        if (!result) {
+//            throw new BusinessException(ErrorCode.PARAMS_ERROR, "更新队伍失败");
+//        }
+//        return ResultUtils.success(true);
+//    }
     /**
      * 更新队伍
-     * @param team 前端传递更新后队伍参数
+     * @param teamUpdateRequest 前端传递更新后队伍参数
+     * @param request 请求
      * @return 成功 / 失败
      */
     @PostMapping("/update")
-    public BaseResponse<Boolean> updateTeam(@RequestBody Team team) {
-        if (team == null) {
+    public BaseResponse<Boolean> updateTeam(@RequestBody TeamUpdateRequest teamUpdateRequest, HttpServletRequest request) {
+        if (teamUpdateRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        boolean result = teamService.updateById(team);
+        User loginUser = userService.getLoginUser(request);
+        boolean result = teamService.updateTeam(teamUpdateRequest, loginUser);
         if (!result) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "更新队伍失败");
         }
-        return ResultUtils.success(true);
+        return ResultUtils.success(result);
     }
 
     /**
@@ -106,26 +127,43 @@ public class TeamController {
         return ResultUtils.success(team);
     }
 
+//    /**
+//     * 根据队伍查询封装类查询队伍列表
+//     * @param teamQuery 队伍查询封装类
+//     * @return 队伍列表
+//     */
+//    @GetMapping("/getTeamsList")
+//    public BaseResponse<List<Team>> getTeamsList(TeamQuery teamQuery) {
+//        if (teamQuery == null) {
+//            throw new BusinessException(ErrorCode.NULL_ERROR);
+//        }
+//        Team team = new Team();
+//        try {
+//            // 将teamQuery中的属性赋值到team中
+//            BeanUtils.copyProperties(team, teamQuery);
+//        } catch (Exception e) {
+//            throw new BusinessException(ErrorCode.SYSTEM_ERROR);
+//        }
+//        QueryWrapper<Team> queryWrapper = new QueryWrapper<>(team);
+//        List<Team> teamList = teamService.list(queryWrapper);
+//        return ResultUtils.success(teamList);
+//    }
+
     /**
-     * 根据队伍查询封装类查询队伍列表
-     * @param teamQuery 队伍查询封装类
-     * @return 队伍列表
+     * 查询队伍用户列表
+     * @param teamQuery 队伍查询包装类
+     * @param request 请求参数
+     * @return 队伍用户包装类列表
      */
-    @GetMapping("/getTeamsList")
-    public BaseResponse<List<Team>> getTeamsList(TeamQuery teamQuery) {
+    @GetMapping("/getTeamList")
+    public BaseResponse<List<TeamUserVO>> getTeamList(TeamQuery teamQuery, HttpServletRequest request) {
         if (teamQuery == null) {
             throw new BusinessException(ErrorCode.NULL_ERROR);
         }
-        Team team = new Team();
-        try {
-            // 将teamQuery中的属性赋值到team中
-            BeanUtils.copyProperties(team, teamQuery);
-        } catch (Exception e) {
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR);
-        }
-        QueryWrapper<Team> queryWrapper = new QueryWrapper<>(team);
-        List<Team> teamList = teamService.list(queryWrapper);
-        return ResultUtils.success(teamList);
+        Boolean isAdmin = userService.isAdmin(request);
+
+        List<TeamUserVO> teamUserVOList = teamService.getTeamList(teamQuery, isAdmin);
+        return ResultUtils.success(teamUserVOList);
     }
 
     /**
@@ -150,23 +188,16 @@ public class TeamController {
         return ResultUtils.success(teamPage);
     }
 
-    /**
-     * 根据名字查询队伍
-     * @param name 队伍名字
-     * @return 队伍信息
-     */
-    @GetMapping("/getTeamByName")
-    public BaseResponse<Team> getTeamByName(String name) {
-        if (StringUtils.isBlank(name)) {
+    @PostMapping("joinTeam")
+    public BaseResponse<Boolean> joinTeam(@RequestBody TeamJoinRequest teamJoinRequest, HttpServletRequest request) {
+        if (teamJoinRequest == null) {
             throw new BusinessException(ErrorCode.NULL_ERROR);
         }
-        QueryWrapper<Team> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("name", name);
-        Team team = teamService.getOne(queryWrapper);
-        if (team == null) {
-            throw new BusinessException(ErrorCode.NULL_ERROR, "队伍不存在");
+        User loginUser = userService.getLoginUser(request);
+        Boolean result = teamService.joinTeam(teamJoinRequest, loginUser);
+        if (!result) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "加入队伍失败");
         }
-        return ResultUtils.success(team);
-    }
+        return ResultUtils.success(result);    }
 
 }
