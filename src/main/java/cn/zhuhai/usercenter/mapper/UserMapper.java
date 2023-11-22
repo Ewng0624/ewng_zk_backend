@@ -4,7 +4,7 @@ import cn.zhuhai.usercenter.model.domain.User;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**
-* @author 86158
+* @author Ewng
 * @description 针对表【user(用户)】的数据库操作Mapper
 * @createDate 2023-11-14 12:03:27
 */

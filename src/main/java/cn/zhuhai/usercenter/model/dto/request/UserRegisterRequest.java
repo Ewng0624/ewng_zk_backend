@@ -1,4 +1,4 @@
-package cn.zhuhai.usercenter.model.request;
+package cn.zhuhai.usercenter.model.dto.request;
 
 import lombok.Data;
 
