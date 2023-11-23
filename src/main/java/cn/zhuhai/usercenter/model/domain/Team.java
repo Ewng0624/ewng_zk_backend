@@ -13,9 +13,7 @@ import lombok.Data;
 @TableName(value ="team")
 @Data
 public class Team implements Serializable {
-    /**
-     * 
-     */
+
     @TableId(type = IdType.AUTO)
     private Long id;
 

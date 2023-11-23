@@ -66,11 +66,12 @@
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
-        <!--        工具包-->
+        <!--工具包-->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
         </dependency>
+        <!--bean工具包，项目中用于属性赋值        -->
         <dependency>
             <groupId>commons-beanutils</groupId>
             <artifactId>commons-beanutils</artifactId>
@@ -82,7 +83,7 @@
             <artifactId>knife4j-spring-boot-starter</artifactId>
             <version>2.0.7</version>
         </dependency>
-
+        <!--解析json-->
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>

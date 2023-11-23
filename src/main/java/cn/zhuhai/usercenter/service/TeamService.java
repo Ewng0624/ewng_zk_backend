@@ -41,5 +41,11 @@ public interface TeamService extends IService<Team> {
     boolean updateTeam(TeamUpdateRequest teamUpdateRequest, User loginUser);
 
 
+    /**
+     * 加入队伍
+     * @param teamJoinRequest 封装加入队伍请求
+     * @param loginUser 当前登录用户
+     * @return 成功 / 失败
+     */
     Boolean joinTeam(TeamJoinRequest teamJoinRequest, User loginUser);
 }

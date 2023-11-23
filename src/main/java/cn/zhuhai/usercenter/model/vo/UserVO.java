@@ -8,8 +8,9 @@ import lombok.Data;
 import java.io.Serializable;
 import java.util.Date;
 
-/**
+/**1
  * @Author Ewng
+ * @Description 用户包装类（不返回给前端敏感数据）
  * @Date 2023/11/22 15:16
  */
 @Data
@@ -19,7 +20,6 @@ public class UserVO implements Serializable {
     /**
      *
      */
-    @TableId(type = IdType.AUTO)
     private Long id;
 
     /**
@@ -42,10 +42,6 @@ public class UserVO implements Serializable {
      */
     private Integer gender;
 
-    /**
-     * '密码'
-     */
-    private String userPassword;
 
     /**
      * '电话'
@@ -87,5 +83,4 @@ public class UserVO implements Serializable {
      * 标签列表 json
      */
     private String tags;
-
 }

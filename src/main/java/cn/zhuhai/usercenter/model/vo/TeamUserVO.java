@@ -1,12 +1,9 @@
 package cn.zhuhai.usercenter.model.vo;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 
 import java.io.Serializable;
 import java.util.Date;
-import java.util.List;
 
 /**
  * @Author Ewng
@@ -17,9 +14,6 @@ import java.util.List;
 public class TeamUserVO implements Serializable {
 
     private static final long serialVersionUID = -5569842581463587320L;
-    /**
-     *
-     */
 
     private Long id;
 

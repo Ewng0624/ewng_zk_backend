@@ -127,7 +127,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
     }
 
     /**
-     * 获取队伍信息
+     * 获取队伍信息（包含用户）
      * @param teamQuery 队伍查询包装类
      * @param isAdmin 是否为管理员
      * @return 队伍用户包装信息
@@ -224,6 +224,12 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
         return teamUserVOList;
     }
 
+    /**
+     * 修改队伍
+     * @param teamUpdateRequest 前端传递team（JSON）
+     * @param loginUser 当前登录用户
+     * @return
+     */
     @Override
     public boolean updateTeam(TeamUpdateRequest teamUpdateRequest, User loginUser) {
         if (teamUpdateRequest == null) {
@@ -287,6 +293,12 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
         return update;
     }
 
+    /**
+     * 加入队伍
+     * @param teamJoinRequest 封装加入队伍请求
+     * @param loginUser 当前登录用户
+     * @return 成功 / 失败
+     */
     @Override
     public Boolean joinTeam(TeamJoinRequest teamJoinRequest, User loginUser) {
         if (teamJoinRequest == null) {

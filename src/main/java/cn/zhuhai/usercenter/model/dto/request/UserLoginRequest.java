@@ -2,8 +2,6 @@ package cn.zhuhai.usercenter.model.dto.request;
 
 import lombok.Data;
 
-import javax.servlet.http.HttpServletRequest;
-
 /**
  * 用户登录请求体
  */

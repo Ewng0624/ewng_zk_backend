@@ -4,6 +4,7 @@ import lombok.Data;
 
 /**
  * @Author Ewng
+ * @Description 封装加入队伍参数
  * @Date 2023/11/22 19:29
  */
 @Data

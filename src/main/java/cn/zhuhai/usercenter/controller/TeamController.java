@@ -188,6 +188,12 @@ public class TeamController {
         return ResultUtils.success(teamPage);
     }
 
+    /**
+     * 加入队伍
+     * @param teamJoinRequest 封装加入队伍请求
+     * @param request 请求
+     * @return 成功 / 失败
+     */
     @PostMapping("joinTeam")
     public BaseResponse<Boolean> joinTeam(@RequestBody TeamJoinRequest teamJoinRequest, HttpServletRequest request) {
         if (teamJoinRequest == null) {
