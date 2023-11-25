@@ -2,6 +2,7 @@ package cn.zhuhai.usercenter.service;
 
 import cn.zhuhai.usercenter.common.BaseResponse;
 import cn.zhuhai.usercenter.model.domain.User;
+import cn.zhuhai.usercenter.model.vo.UserVO;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import javax.servlet.http.HttpServletRequest;
@@ -94,4 +95,12 @@ public interface UserService extends IService<User> {
      * @return 是否是管理员
      */
     Boolean isAdmin(User loginUse);
+
+    /**
+     * 用户匹配
+     * @param nums 推荐前nums条（top n）
+     * @param loginUser 当前用户
+     * @return
+     */
+    List<User> matchUsers(long nums, User loginUser);
 }

@@ -7,6 +7,7 @@ import cn.zhuhai.usercenter.exception.BusinessException;
 import cn.zhuhai.usercenter.model.domain.User;
 import cn.zhuhai.usercenter.model.dto.request.UserLoginRequest;
 import cn.zhuhai.usercenter.model.dto.request.UserRegisterRequest;
+import cn.zhuhai.usercenter.model.vo.UserVO;
 import cn.zhuhai.usercenter.service.UserService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -197,5 +198,20 @@ public class UserController {
         }
         // 删除当前登录状态
         return ResultUtils.success(userService.userLogout(request));
+    }
+
+    /**
+     * 推荐用户（top N）
+     * @param nums 推荐num条
+     * @param request 请求
+     * @return
+     */
+    @GetMapping("/match")
+    public BaseResponse<List<User>> matchUsers(long nums, HttpServletRequest request) {
+        if (nums <= 0 || nums > 20) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        return ResultUtils.success(userService.matchUsers(nums, loginUser));
     }
 }
