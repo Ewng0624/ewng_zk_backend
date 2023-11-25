@@ -9,6 +9,7 @@ import cn.zhuhai.usercenter.model.domain.User;
 import cn.zhuhai.usercenter.model.dto.TeamQuery;
 import cn.zhuhai.usercenter.model.dto.request.TeamAddRequest;
 import cn.zhuhai.usercenter.model.dto.request.TeamJoinRequest;
+import cn.zhuhai.usercenter.model.dto.request.TeamQuitRequest;
 import cn.zhuhai.usercenter.model.dto.request.TeamUpdateRequest;
 import cn.zhuhai.usercenter.model.vo.TeamUserVO;
 import cn.zhuhai.usercenter.service.TeamService;
@@ -75,6 +76,19 @@ public class TeamController {
         return ResultUtils.success(true);
     }
 
+
+    @PostMapping("/quitTeam")
+    public BaseResponse<Boolean> quitTeam(TeamQuitRequest teamQuitRequest, HttpServletRequest request) {
+        if (teamQuitRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        boolean quit = teamService.quitByTeamId(teamQuitRequest, loginUser);
+        if (!quit) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "删除队伍失败");
+        }
+        return ResultUtils.success(true);
+    }
 //    /**
 //     * 更新队伍
 //     * @param team 前端传递更新后队伍参数

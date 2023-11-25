@@ -8,6 +8,7 @@ import cn.zhuhai.usercenter.model.domain.User;
 import cn.zhuhai.usercenter.model.domain.UserTeam;
 import cn.zhuhai.usercenter.model.dto.TeamQuery;
 import cn.zhuhai.usercenter.model.dto.request.TeamJoinRequest;
+import cn.zhuhai.usercenter.model.dto.request.TeamQuitRequest;
 import cn.zhuhai.usercenter.model.dto.request.TeamUpdateRequest;
 import cn.zhuhai.usercenter.model.enums.TeamStatusEnum;
 import cn.zhuhai.usercenter.model.vo.TeamUserVO;
@@ -348,9 +349,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "已加入，不能重复加入");
         }
         // 已加入队伍人数
-        queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("teamId", teamJoinRequestId);
-        long teamHasJoinNum = userTeamService.count(queryWrapper);
+        long teamHasJoinNum = this.countTeamUserByTeamId(teamJoinRequestId);
         if (teamHasJoinNum > team.getMaxNum()) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "已达到队伍最大人数");
         }
@@ -361,6 +360,95 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
         userTeam.setJoinTime(new Date());
         boolean save = userTeamService.save(userTeam);
         return save;
+    }
+
+    /**
+     * 退出队伍
+     * @param teamQuitRequest 退出队伍封装类
+     * @param loginUser 当前登录用户
+     * @return 成功 / 失败
+     */
+    @Override
+    public boolean quitByTeamId(TeamQuitRequest teamQuitRequest, User loginUser) {
+        if (teamQuitRequest == null) {
+            throw new BusinessException(ErrorCode.NULL_ERROR);
+        }
+        // 拿到当前要退出队伍的id
+        Long teamId = teamQuitRequest.getTeamId();
+        if (teamId == null || teamId <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        Team team = this.getById(teamId);
+        // 校验队伍是否存在
+        if (team == null) {
+            throw new BusinessException(ErrorCode.NULL_ERROR, "队伍不存在");
+        }
+        // 校验当前用户是否加入队伍
+        Long userId = loginUser.getId();
+        UserTeam userTeam = new UserTeam();
+        userTeam.setUserId(userId);
+        userTeam.setTeamId(teamId);
+        QueryWrapper<UserTeam> queryWrapper = new QueryWrapper<>(userTeam);
+        long count = userTeamService.count(queryWrapper);
+        // 未加入队伍
+        if (count < 1) {
+            throw new BusinessException(ErrorCode.NO_AUTH, "用户为加入当前队伍");
+        }
+        // 获取当前加入队伍的人数
+        long teamHasJoinNums = this.countTeamUserByTeamId(teamId);
+        // 队伍只剩一人，解散
+        if (teamHasJoinNums == 1) {
+            // 删除队伍和所有加入队伍的关系
+            this.removeById(teamId);
+            queryWrapper.eq("teamId", teamId);
+        }else {// 队伍剩余人数 > 1
+            // 判断是否是队长
+            if (team.getUserId().longValue() == userId.longValue()) {
+                QueryWrapper<UserTeam> userTeamQueryWrapper = new QueryWrapper<>();
+                // 把队伍转移给最早加入的用户
+                // 查询已加入队伍的所有用户和加入时间
+                userTeamQueryWrapper.eq("teamId", teamId);
+                // 先进入队伍的在用户队伍关系表中的id一定小 取两条
+                userTeamQueryWrapper.last("order by id asc limit 2");
+                List<UserTeam> userTeamList = userTeamService.list(userTeamQueryWrapper);
+                if (CollectionUtils.isEmpty(userTeamList) || userTeamList.size() <= 1) {
+                    throw new BusinessException(ErrorCode.SYSTEM_ERROR);
+                }
+                // 转让队长
+                UserTeam nextUserTeam = userTeamList.get(1);
+                Long nextTeamLeaderId = nextUserTeam.getUserId();
+                Team updateTeam = new Team();
+                updateTeam.setId(teamId);
+                updateTeam.setUserId(nextTeamLeaderId);
+                // 更新
+                boolean result = this.updateById(updateTeam);
+                if (!result) {
+                    throw new BusinessException(ErrorCode.SYSTEM_ERROR, "更新队长失败");
+                }
+                // 将之前记录删除
+                queryWrapper = new QueryWrapper<>();
+                queryWrapper.eq("teamId", teamId);
+                queryWrapper.eq("userId", userId);
+
+            }else {
+                // 不是队长自己退出
+                // return userTeamService.remove(queryWrapper);
+            }
+        }
+        return userTeamService.remove(queryWrapper);
+    }
+
+    /**
+     * 获取当前队伍人数
+     * @param teamId 队伍ID
+     * @return 人数
+     */
+    private long countTeamUserByTeamId(long teamId) {
+        // 已加入队伍人数
+        QueryWrapper<UserTeam> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("teamId", teamId);
+        long teamHasJoinNum = userTeamService.count(queryWrapper);
+        return teamHasJoinNum;
     }
 }
 

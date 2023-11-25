@@ -4,6 +4,7 @@ import cn.zhuhai.usercenter.model.domain.Team;
 import cn.zhuhai.usercenter.model.domain.User;
 import cn.zhuhai.usercenter.model.dto.TeamQuery;
 import cn.zhuhai.usercenter.model.dto.request.TeamJoinRequest;
+import cn.zhuhai.usercenter.model.dto.request.TeamQuitRequest;
 import cn.zhuhai.usercenter.model.dto.request.TeamUpdateRequest;
 import cn.zhuhai.usercenter.model.vo.TeamUserVO;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -48,4 +49,7 @@ public interface TeamService extends IService<Team> {
      * @return 成功 / 失败
      */
     Boolean joinTeam(TeamJoinRequest teamJoinRequest, User loginUser);
+
+
+    boolean quitByTeamId(TeamQuitRequest teamQuitRequest, User loginUser);
 }
