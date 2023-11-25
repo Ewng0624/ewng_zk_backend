@@ -6,6 +6,7 @@ import cn.zhuhai.usercenter.common.ResultUtils;
 import cn.zhuhai.usercenter.exception.BusinessException;
 import cn.zhuhai.usercenter.model.domain.Team;
 import cn.zhuhai.usercenter.model.domain.User;
+import cn.zhuhai.usercenter.model.domain.UserTeam;
 import cn.zhuhai.usercenter.model.dto.TeamQuery;
 import cn.zhuhai.usercenter.model.dto.request.TeamAddRequest;
 import cn.zhuhai.usercenter.model.dto.request.TeamJoinRequest;
@@ -14,16 +15,18 @@ import cn.zhuhai.usercenter.model.dto.request.TeamUpdateRequest;
 import cn.zhuhai.usercenter.model.vo.TeamUserVO;
 import cn.zhuhai.usercenter.service.TeamService;
 import cn.zhuhai.usercenter.service.UserService;
+import cn.zhuhai.usercenter.service.UserTeamService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.apache.commons.beanutils.BeanUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @Author Ewng
@@ -38,6 +41,9 @@ public class TeamController {
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private UserTeamService userTeamService;
 
     /**
      * 添加队伍
@@ -60,36 +66,24 @@ public class TeamController {
     }
 
     /**
-     * 删除队伍
-     * @param id 删除队伍的id
+     * 加入队伍
+     * @param teamJoinRequest 封装加入队伍请求
+     * @param request 请求
      * @return 成功 / 失败
      */
-    @PostMapping("/delete")
-    public BaseResponse<Boolean> deleteTeam(Long id) {
-        if (id <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
-        }
-        boolean remove = teamService.removeById(id);
-        if (!remove) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "删除队伍失败");
-        }
-        return ResultUtils.success(true);
-    }
-
-
-    @PostMapping("/quitTeam")
-    public BaseResponse<Boolean> quitTeam(TeamQuitRequest teamQuitRequest, HttpServletRequest request) {
-        if (teamQuitRequest == null) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+    @PostMapping("joinTeam")
+    public BaseResponse<Boolean> joinTeam(@RequestBody TeamJoinRequest teamJoinRequest, HttpServletRequest request) {
+        if (teamJoinRequest == null) {
+            throw new BusinessException(ErrorCode.NULL_ERROR);
         }
         User loginUser = userService.getLoginUser(request);
-        boolean quit = teamService.quitByTeamId(teamQuitRequest, loginUser);
-        if (!quit) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "删除队伍失败");
+        Boolean result = teamService.joinTeam(teamJoinRequest, loginUser);
+        if (!result) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "加入队伍失败");
         }
-        return ResultUtils.success(true);
-    }
-//    /**
+        return ResultUtils.success(result);    }
+
+    //    /**
 //     * 更新队伍
 //     * @param team 前端传递更新后队伍参数
 //     * @return 成功 / 失败
@@ -181,6 +175,56 @@ public class TeamController {
     }
 
     /**
+     * 获取当前加入的队伍
+     * @param teamQuery
+     * @param request
+     * @return
+     */
+    @GetMapping("/get/my/join")
+    public BaseResponse<List<TeamUserVO>> getCurrentAddTeam(TeamQuery teamQuery, HttpServletRequest request) {
+        if (teamQuery == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        QueryWrapper<UserTeam> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("userId", loginUser.getId());
+        // 取出加入的队伍
+        List<UserTeam> userTeamList = userTeamService.list(queryWrapper);
+        // 取出不重复的队伍 id
+        // teamId userId
+        // 1, 2
+        // 1, 3
+        // 2, 3
+        // result
+        // 1 => 2, 3
+        // 2 => 3
+        Map<Long, List<UserTeam>> listMap = userTeamList.stream()
+                .collect(Collectors.groupingBy(UserTeam::getTeamId));
+        List<Long> idList = new ArrayList<>(listMap.keySet());
+        teamQuery.setIdList(idList);
+        List<TeamUserVO> teamList = teamService.getTeamList(teamQuery, true);
+        return ResultUtils.success(teamList);
+    }
+
+    /**
+     * 获取我当前创建的队伍
+     * @param teamQuery
+     * @param request
+     * @return
+     */
+    @GetMapping("/get/my/create")
+    public BaseResponse<List<TeamUserVO>> getCurrentCreateTeam(TeamQuery teamQuery, HttpServletRequest request) {
+        if (teamQuery == null) {
+            throw new BusinessException(ErrorCode.NULL_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        teamQuery.setUserId(loginUser.getId());
+        List<TeamUserVO> teamVOList = teamService.getTeamList(teamQuery, true);
+        return ResultUtils.success(teamVOList);
+    }
+
+
+    /**
      * 分页逻辑
      * @param teamQuery 队伍查询封装类
      * @return 每页的队伍信息
@@ -203,21 +247,40 @@ public class TeamController {
     }
 
     /**
-     * 加入队伍
-     * @param teamJoinRequest 封装加入队伍请求
+     * 删除队伍
+     * @param id 删除队伍的id
      * @param request 请求
      * @return 成功 / 失败
      */
-    @PostMapping("joinTeam")
-    public BaseResponse<Boolean> joinTeam(@RequestBody TeamJoinRequest teamJoinRequest, HttpServletRequest request) {
-        if (teamJoinRequest == null) {
-            throw new BusinessException(ErrorCode.NULL_ERROR);
+    @PostMapping("/delete")
+    public BaseResponse<Boolean> deleteTeam(Long id, HttpServletRequest request) {
+        if (id <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         User loginUser = userService.getLoginUser(request);
-        Boolean result = teamService.joinTeam(teamJoinRequest, loginUser);
-        if (!result) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "加入队伍失败");
+        boolean remove = teamService.deleteTeam(id, loginUser);
+        if (!remove) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "删除队伍失败");
         }
-        return ResultUtils.success(result);    }
+        return ResultUtils.success(true);
+    }
 
+    /**
+     * 退出队伍
+     * @param teamQuitRequest 退出队伍请求参数封装
+     * @param request 请求
+     * @return 成功 / 失败
+     */
+    @PostMapping("/quitTeam")
+    public BaseResponse<Boolean> quitTeam(@RequestBody TeamQuitRequest teamQuitRequest, HttpServletRequest request) {
+        if (teamQuitRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        boolean quit = teamService.quitByTeamId(teamQuitRequest, loginUser);
+        if (!quit) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "删除队伍失败");
+        }
+        return ResultUtils.success(true);
+    }
 }

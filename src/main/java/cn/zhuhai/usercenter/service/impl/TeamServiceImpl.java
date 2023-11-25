@@ -2,7 +2,6 @@ package cn.zhuhai.usercenter.service.impl;
 import java.util.Date;
 
 import cn.zhuhai.usercenter.common.ErrorCode;
-import cn.zhuhai.usercenter.common.ResultUtils;
 import cn.zhuhai.usercenter.exception.BusinessException;
 import cn.zhuhai.usercenter.model.domain.User;
 import cn.zhuhai.usercenter.model.domain.UserTeam;
@@ -21,10 +20,11 @@ import cn.zhuhai.usercenter.model.domain.Team;
 import cn.zhuhai.usercenter.service.TeamService;
 import cn.zhuhai.usercenter.mapper.TeamMapper;
 import org.apache.commons.beanutils.BeanUtils;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
+
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -141,6 +141,11 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
             // 根据id查询
             if (id != null && id > 0) {
                 queryWrapper.eq("id", id);
+            }
+            // 根据id列表查询
+            List<Long> idList = teamQuery.getIdList();
+            if (CollectionUtils.isNotEmpty(idList)) {
+                queryWrapper.in("id", idList);
             }
             //根据关键字查询
             String searchText = teamQuery.getSearchText();
@@ -368,6 +373,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
      * @param loginUser 当前登录用户
      * @return 成功 / 失败
      */
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public boolean quitByTeamId(TeamQuitRequest teamQuitRequest, User loginUser) {
         if (teamQuitRequest == null) {
@@ -437,6 +443,47 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
         }
         return userTeamService.remove(queryWrapper);
     }
+
+    /**
+     * 删除（解散）队伍
+     * @param id 队伍id
+     * @param loginUser 当前登录用户
+     * @return 成功 / 失败
+     */
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public boolean deleteTeam(Long id, User loginUser) {
+        if (id == null) {
+            throw new BusinessException(ErrorCode.NULL_ERROR);
+        }
+        // 校验当前队伍是否存在
+        Team team = this.getById(id);
+        if (team == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "队伍不存在");
+        }
+        // 判断当前登录用户是否是队长 有权限解散队伍
+        Long userId = loginUser.getId();
+        Long teamUserId = team.getUserId();
+        if (userId.longValue() != teamUserId.longValue()) {
+            throw new BusinessException(ErrorCode.NO_AUTH, "你不是队长，无权限解散队伍");
+        }
+        // 移除关联关系
+        // 队伍表  用户-队伍关系表
+        // 移除队伍表中的信息
+        boolean removeTeamById = this.removeById(team.getId());
+        if (!removeTeamById) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "移除队伍失败");
+        }
+        // 移除关系表中的信息
+        QueryWrapper<UserTeam> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("teamId", team.getId());
+        boolean removeUserTeam = userTeamService.remove(queryWrapper);
+        if (!removeUserTeam) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "移除队伍失败");
+        }
+        return true;
+    }
+
 
     /**
      * 获取当前队伍人数

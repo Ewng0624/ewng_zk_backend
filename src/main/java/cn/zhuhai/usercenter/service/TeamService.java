@@ -50,6 +50,20 @@ public interface TeamService extends IService<Team> {
      */
     Boolean joinTeam(TeamJoinRequest teamJoinRequest, User loginUser);
 
-
+    /**
+     * 退出队伍
+     * @param teamQuitRequest 退出队伍请求参数封装
+     * @param loginUser 当前登录用户
+     * @return 成功 / 失败
+     */
     boolean quitByTeamId(TeamQuitRequest teamQuitRequest, User loginUser);
+
+    /**
+     * 删除（解散）队伍
+     * @param id 队伍id
+     * @param loginUser 当前登录用户
+     * @return 成功 / 失败
+     */
+    boolean deleteTeam(Long id, User loginUser);
+
 }

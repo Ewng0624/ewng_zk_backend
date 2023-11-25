@@ -4,6 +4,8 @@ import cn.zhuhai.usercenter.common.PageRequest;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.List;
+
 
 /**
  * @Author Ewng
@@ -17,6 +19,11 @@ public class TeamQuery extends PageRequest {
      *
      */
     private Long id;
+
+    /**
+     * id列表
+     */
+    private List<Long> idList;
 
     /**
      * 关键字查询
